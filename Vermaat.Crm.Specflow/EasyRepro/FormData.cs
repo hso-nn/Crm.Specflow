@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TechTalk.SpecFlow;
-using Vermaat.Crm.Specflow.EasyRepro.Fields;
+using Vermaat.Crm.Specflow.EasyRepro.Controls;
 
 namespace Vermaat.Crm.Specflow.EasyRepro
 {
@@ -18,9 +18,9 @@ namespace Vermaat.Crm.Specflow.EasyRepro
     {
         private readonly UCIApp _app;
         private readonly EntityMetadata _entityMetadata;
-        private readonly Dictionary<string, FormField> _formFields;
+        private readonly Dictionary<string, FormField> _fields;
 
-        public FormField this[string attributeName] => _formFields[attributeName];
+        public FormField this[string attributeName] => _fields[attributeName];
         public CommandBarActions CommandBar { get; }
 
         public FormData(UCIApp app, EntityMetadata entityMetadata)
@@ -29,7 +29,7 @@ namespace Vermaat.Crm.Specflow.EasyRepro
             _entityMetadata = entityMetadata;
             CommandBar = new CommandBarActions(_app);
 
-            _formFields = InitializeFormData();
+            _fields = InitializeFormData();
         }
 
         public void ClickSubgridButton(string subgridName, string subgridButton)
@@ -39,7 +39,7 @@ namespace Vermaat.Crm.Specflow.EasyRepro
 
         public bool ContainsField(string fieldLogicalName)
         {
-            var containsField = _formFields.ContainsKey(fieldLogicalName);
+            var containsField = _fields.ContainsKey(fieldLogicalName);
             Logger.WriteLine($"Field {fieldLogicalName} is on Form: {containsField}");
             return containsField;
         }
@@ -85,7 +85,7 @@ namespace Vermaat.Crm.Specflow.EasyRepro
             foreach (var row in formData.Rows)
             {
                 Assert.IsTrue(ContainsField(row[Constants.SpecFlow.TABLE_KEY]), $"Field {row[Constants.SpecFlow.TABLE_KEY]} isn't on the form");
-                var field = _formFields[row[Constants.SpecFlow.TABLE_KEY]];
+                var field = _fields[row[Constants.SpecFlow.TABLE_KEY]];
                 Assert.IsTrue(field.IsVisible(formState), $"Field {row[Constants.SpecFlow.TABLE_KEY]} isn't visible");
                 Assert.IsFalse(field.IsLocked(formState), $"Field {row[Constants.SpecFlow.TABLE_KEY]} is read-only");
 
@@ -141,8 +141,18 @@ namespace Vermaat.Crm.Specflow.EasyRepro
 
         private Dictionary<string, FormField> InitializeFormData()
         {
-            dynamic attributeCollection = _app.WebDriver.ExecuteScript("return Xrm.Page.data.entity.attributes.getAll().map(function(a) { return { name: a.getName(), controls: a.controls.getAll().map(function(c) { return c.getName() }) } })");
+            dynamic attributeCollection = _app.WebDriver.ExecuteScript(@"
+                return Xrm.Page.data.entity.attributes.getAll()
+                    .map(function(a) { 
+                        return { 
+                            name: a.getName(), 
+                            controls: a.controls.getAll().map(function(c) { 
+                                return c.getName()
+                            }) 
+                        } 
+                    })");
 
+            var controlMap = new Dictionary<string, FormField>();
             var formFields = new Dictionary<string, FormField>();
             var metadataDic = _entityMetadata.Attributes.ToDictionary(a => a.LogicalName);
             foreach (var attribute in attributeCollection)
@@ -156,8 +166,63 @@ namespace Vermaat.Crm.Specflow.EasyRepro
 
                 FormField field = CreateFormField(metadataDic[attribute["name"]], controls);
                 if (field != null)
+                {
                     formFields.Add(attribute["name"], field);
+                    controlMap.Add(field.ControlName, field);
+                }
+
+            }
+
+            dynamic formStructure = _app.WebDriver.ExecuteScript(@"
+                return Xrm.Page.ui.tabs.getAll()
+                    .map(function(t) {
+                        return {
+                            name: t.getName(),
+                            label: t.getLabel(),
+                            sections: t.sections.getAll().map(function(s) {
+                                return {
+                                    name: s.getName(),
+                                    label: s.getLabel(),
+                                    controls: s.controls.getAll().map(function(c) {
+                                        return {
+                                            name: c.getName(),
+                                            type: c.getControlType()
+                                        }
+                                    })
+                                }
+                            })
+                        }	
+                    })");
+
+            foreach(var tab in formStructure)
+            {
+                var formTab = new FormTab(tab["name"], tab["label"]);
                 
+                foreach(var section in tab["sections"])
+                {
+                    var formSection = new FormSection(section["name"], section["label"]);
+                    formTab.Sections.Add(formSection);
+
+                    foreach(var control in section["controls"])
+                    {
+                        switch(control["type"])
+                        {
+                            case "subgrid":
+                                var grid = new Subgrid(_app, control["name"]);
+                                formSection.Subgrids.Add(grid);
+                                break;
+                            case "standard":
+                            case "lookup":
+                            case "optionset":
+                            case "multiselectoptionset":
+                                if (controlMap.TryGetValue(control["name"], out FormField formField))
+                                    formSection.Fields.Add(formField);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
             }
 
             return formFields;

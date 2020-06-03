@@ -9,7 +9,7 @@ using System.Linq;
 using OpenQA.Selenium.Interactions;
 using Microsoft.Dynamics365.UIAutomation.Api.UCI.DTO;
 
-namespace Vermaat.Crm.Specflow.EasyRepro.Fields
+namespace Vermaat.Crm.Specflow.EasyRepro.Controls
 {
     public abstract class FormField : Field
     {
@@ -17,7 +17,7 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
         protected string Control { get; private set; }
 
         public FormField(UCIApp app, AttributeMetadata attributeMetadata, string control)
-            : base(app, attributeMetadata)
+            : base(app, attributeMetadata, control)
         {
             Control = control;
         }

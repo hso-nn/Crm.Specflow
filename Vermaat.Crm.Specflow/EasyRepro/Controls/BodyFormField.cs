@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Vermaat.Crm.Specflow.EasyRepro.FieldTypes;
 
-namespace Vermaat.Crm.Specflow.EasyRepro.Fields
+namespace Vermaat.Crm.Specflow.EasyRepro.Controls
 {
     public class BodyFormField : FormField
     {

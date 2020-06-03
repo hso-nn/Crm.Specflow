@@ -10,19 +10,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Vermaat.Crm.Specflow.EasyRepro.FieldTypes;
 
-namespace Vermaat.Crm.Specflow.EasyRepro.Fields
+namespace Vermaat.Crm.Specflow.EasyRepro.Controls
 {
-    public abstract class Field
+    public abstract class Field : Control
     {
         protected AttributeMetadata Metadata { get; }
-        protected UCIApp App { get; }
 
         protected virtual string LogicalName => Metadata.LogicalName;
 
-        public Field(UCIApp app, AttributeMetadata metadata)
+        public Field(UCIApp app, AttributeMetadata metadata, string control)
+            :base(app, control)
         {
             Metadata = metadata;
-            App = app;
         }
 
         public virtual void SetValue(CrmTestingContext crmContext, string fieldValueText)

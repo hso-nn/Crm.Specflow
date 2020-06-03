@@ -8,14 +8,14 @@ using Microsoft.Dynamics365.UIAutomation.Browser;
 using Microsoft.Xrm.Sdk.Metadata;
 using Vermaat.Crm.Specflow.EasyRepro.FieldTypes;
 
-namespace Vermaat.Crm.Specflow.EasyRepro.Fields
+namespace Vermaat.Crm.Specflow.EasyRepro.Controls
 {
     class OpportunityCloseDialogField : Field
     {
         protected override string LogicalName => GetLogicalName();
 
         public OpportunityCloseDialogField(UCIApp app, AttributeMetadata metadata)
-            : base(app, metadata)
+            : base(app, metadata, null)
         {
         }
 
