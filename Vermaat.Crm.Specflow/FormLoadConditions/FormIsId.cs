@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vermaat.Crm.Specflow.EasyRepro;
 
 namespace Vermaat.Crm.Specflow.FormLoadConditions
 {
@@ -19,7 +20,7 @@ namespace Vermaat.Crm.Specflow.FormLoadConditions
             _invert = invert;
         }
 
-        public bool Evaluate(IWebDriver driver)
+        public bool Evaluate(IWebDriver driver, SeleniumSelectorData selectors)
         {
             try
             {

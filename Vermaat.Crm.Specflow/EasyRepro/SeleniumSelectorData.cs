@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Vermaat.Crm.Specflow.EasyRepro
 {
-    internal class SeleniumSelectorData
+    public class SeleniumSelectorData
     {
         private readonly Dictionary<SeleniumSelectorItems, string> _selectors = new Dictionary<SeleniumSelectorItems, string>()
         {

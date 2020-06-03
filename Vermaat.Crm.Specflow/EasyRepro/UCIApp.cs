@@ -11,6 +11,9 @@ namespace Vermaat.Crm.Specflow.EasyRepro
 {
     public class UCIApp : IDisposable
     {
+        private static readonly SeleniumSelectorData _selectors = new SeleniumSelectorData();
+
+
         public UCIApp(BrowserOptions options, ButtonTexts buttonTexts)
         {
             Client = new WebClient(options);
@@ -47,5 +50,13 @@ namespace Vermaat.Crm.Specflow.EasyRepro
             Dispose(true);
         }
         #endregion
+
+        public T ExecuteSeleniumFunction<T>(Func<IWebDriver, SeleniumSelectorData, T> executionFunction)
+        {
+            return Client.Execute(BrowserOptionHelper.GetOptions("SpecFlowCommand"), d =>
+            {
+                return executionFunction(d, _selectors);
+            }).Value;
+        }
     }
 }

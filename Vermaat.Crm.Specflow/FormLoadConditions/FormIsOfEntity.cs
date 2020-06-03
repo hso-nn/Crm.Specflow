@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Dynamics365.UIAutomation.Browser;
 using OpenQA.Selenium;
+using Vermaat.Crm.Specflow.EasyRepro;
 
 namespace Vermaat.Crm.Specflow.FormLoadConditions
 {
@@ -17,7 +18,7 @@ namespace Vermaat.Crm.Specflow.FormLoadConditions
             _entityName = entityName;
         }
 
-        public bool Evaluate(IWebDriver driver)
+        public bool Evaluate(IWebDriver driver, SeleniumSelectorData selectors)
         {
             try
             {

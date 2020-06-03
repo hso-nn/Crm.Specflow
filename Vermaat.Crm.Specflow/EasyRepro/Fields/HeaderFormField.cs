@@ -85,7 +85,11 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
 
         protected override void SetTextField(string fieldValue)
         {
-            App.Client.SetValueFix(LogicalName, fieldValue, ContainerType.Header);
+            App.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                TemporaryFixes.SetValueFix(driver, selectors, LogicalName, fieldValue, ContainerType.Header);
+                return true;
+            });
         }
 
         protected override void SetTwoOptionField(BooleanValue value)

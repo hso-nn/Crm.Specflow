@@ -27,8 +27,13 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         public void ExpandHeader()
         {
             Logger.WriteLine("Expanding headers");
-            var header = SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_Header, string.Empty);
-            _app.WebDriver.ClickWhenAvailable(header);
+
+            _app.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                var header = selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_Header, string.Empty);
+                _app.WebDriver.ClickWhenAvailable(header);
+                return true;
+            });
         }
 
         public void ExpandTab(string tabLabel)

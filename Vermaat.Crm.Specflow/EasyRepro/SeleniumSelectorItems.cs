@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Vermaat.Crm.Specflow.EasyRepro
 {
-    internal enum SeleniumSelectorItems
+    public enum SeleniumSelectorItems
     {
         Dialog_Container,
         Dialog_OK,

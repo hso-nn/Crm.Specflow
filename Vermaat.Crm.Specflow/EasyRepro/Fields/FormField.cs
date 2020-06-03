@@ -24,13 +24,13 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
 
         public virtual RequiredState GetRequiredState(FormState formState)
         {
-            BrowserCommandResult<RequiredState> result = App.Client.Execute(BrowserOptionHelper.GetOptions($"Check field requirement"), driver =>
+            return App.ExecuteSeleniumFunction((driver, selectors) =>
             {
                 IWebElement fieldContainer = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", LogicalName)));
                 if (fieldContainer == null)
                     throw new TestExecutionException(Constants.ErrorCodes.FIELD_NOT_ON_FORM, LogicalName);
 
-                if (fieldContainer.TryFindElement(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormState_RequiredOrRecommended, LogicalName), out IWebElement requiredElement))
+                if (fieldContainer.TryFindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormState_RequiredOrRecommended, LogicalName), out IWebElement requiredElement))
                 {
                     if (requiredElement.GetAttribute("innerText") == "*")
                         return RequiredState.Required;
@@ -42,27 +42,28 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
                     return RequiredState.Optional;
                 }
             });
-
-            return result.Value;
         }
 
         public virtual bool IsVisible(FormState formState)
         {
-            return App.WebDriver.WaitUntilVisible(
-                SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FieldContainer, Control),
-                TimeSpan.FromSeconds(5)) != null;
+            return App.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                return driver.WaitUntilVisible(
+                 selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FieldContainer, Control),
+                 TimeSpan.FromSeconds(5)) != null;
+            });
         }
 
         public virtual bool IsLocked(FormState formState)
         {
-            return App.Client.Execute(BrowserOptionHelper.GetOptions($"Check field locked state"), driver =>
+            return App.ExecuteSeleniumFunction((driver, selectors) =>
             {
                 IWebElement fieldContainer = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", LogicalName)));
                 if (fieldContainer == null)
                     throw new TestExecutionException(Constants.ErrorCodes.FIELD_NOT_ON_FORM, LogicalName);
 
-                return fieldContainer.TryFindElement(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormState_LockedIcon, LogicalName), out IWebElement requiredElement);
-            }).Value;
+                return fieldContainer.TryFindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormState_LockedIcon, LogicalName), out IWebElement requiredElement);
+            });
         }
     }
 }

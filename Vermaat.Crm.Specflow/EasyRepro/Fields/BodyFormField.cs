@@ -100,7 +100,11 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
 
         protected override void SetTextField(string fieldValue)
         {
-            App.Client.SetValueFix(LogicalName, fieldValue, ContainerType.Body);
+            App.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                TemporaryFixes.SetValueFix(driver, selectors, LogicalName, fieldValue, ContainerType.Body);
+                return true;
+            });
         }
 
         protected override void SetLookupValue(LookupValue value)

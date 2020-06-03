@@ -11,11 +11,11 @@ namespace Vermaat.Crm.Specflow.FormLoadConditions
 {
     class NoBusinessProcessError : IFormLoadCondition
     {
-        public bool Evaluate(IWebDriver driver)
+        public bool Evaluate(IWebDriver driver, SeleniumSelectorData selectors)
         {
-            if(driver.HasElement(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_ErrorDialog)))
+            if(driver.HasElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_ErrorDialog)))
             {
-                var error = SeleniumFunctions.GetErrorDialogMessage(driver);
+                var error = SeleniumFunctions.GetErrorDialogMessage(driver, selectors);
                 throw new TestExecutionException(Constants.ErrorCodes.BUSINESS_PROCESS_ERROR_WHEN_LOADING, error);
             }
             else

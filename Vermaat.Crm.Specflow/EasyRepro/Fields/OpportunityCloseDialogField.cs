@@ -67,7 +67,11 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
         protected override void SetOptionSetField(FieldTypes.OptionSetValue value)
         {
             if (value.Value.HasValue)
-                App.Client.SetValueFix(value.ToOptionSet(LogicalName), ContainerType.Dialog);
+                App.ExecuteSeleniumFunction((driver, selectors) =>
+                {
+                    TemporaryFixes.SetValueFix(driver, selectors, value.ToOptionSet(LogicalName), ContainerType.Dialog);
+                    return true;
+                });
             else
                 App.App.Entity.ClearValue(value.ToOptionSet(LogicalName));
         }
@@ -79,7 +83,11 @@ namespace Vermaat.Crm.Specflow.EasyRepro.Fields
 
         protected override void SetTextField(string fieldValue)
         {
-            App.Client.SetValueFix(LogicalName, fieldValue, ContainerType.Dialog);
+            App.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                TemporaryFixes.SetValueFix(driver, selectors, LogicalName, fieldValue, ContainerType.Dialog);
+                return true;
+            });
         }
 
         protected override void SetLookupValue(LookupValue value)

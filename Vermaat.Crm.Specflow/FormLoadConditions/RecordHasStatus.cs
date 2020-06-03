@@ -18,10 +18,10 @@ namespace Vermaat.Crm.Specflow.FormLoadConditions
             _status = status;
         }
 
-        public bool Evaluate(IWebDriver driver)
+        public bool Evaluate(IWebDriver driver, SeleniumSelectorData selectors)
         {
             Logger.WriteLine($"Evaluating if current record's footer status is {_status}");
-            var footerStatus = driver.WaitUntilAvailable(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_Footer_Status), TimeSpan.FromSeconds(5));
+            var footerStatus = driver.WaitUntilAvailable(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_Footer_Status), TimeSpan.FromSeconds(5));
 
             if (footerStatus == null)
                 return false;

@@ -34,7 +34,28 @@ namespace Vermaat.Crm.Specflow.EasyRepro
 
         public void ClickSubgridButton(string subgridName, string subgridButton)
         {
-            _app.Client.ClickSubgridButton(subgridName, subgridButton);
+            _app.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                var subGrid = driver.WaitUntilAvailable(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_SubGrid, subgridName), $"Unable to find subgrid: {subgridName}");
+                var menuBar = subGrid.FindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_SubGrid_ButtonList));
+                var buttons = menuBar.FindElements(By.TagName("button"));
+                var button = buttons.FirstOrDefault(b => b.GetAttribute("data-id").Contains(subgridButton));
+                if (button != null)
+                {
+                    button.Click();
+                    return true;
+                }
+
+                var moreCommands = buttons.FirstOrDefault(b => b.GetAttribute("data-id").Equals("OverflowButton"));
+                if (moreCommands == null)
+                    throw new TestExecutionException(Constants.ErrorCodes.MORE_COMMANDS_NOT_FOUND);
+                moreCommands.Click();
+
+                var flyout = driver.FindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.FlyoutRoot));
+                flyout.FindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_SubGrid_Button, subgridButton)).Click();
+
+                return true;
+            });
         }
 
         public bool ContainsField(string fieldLogicalName)
@@ -47,12 +68,58 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         public string GetErrorDialogMessage()
         {
             Logger.WriteLine("Getting error dialog message");
-            return _app.Client.GetErrorDialogMessage();
+            return _app.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                return SeleniumFunctions.GetErrorDialogMessage(driver, selectors);
+            });
+            
         }
 
         public IReadOnlyCollection<FormNotification> GetFormNotifications()
         {
-            return _app.Client.GetFormNotifications();
+            return _app.ExecuteSeleniumFunction((driver, selectors) =>
+            {
+                List<FormNotification> notifications = new List<FormNotification>();
+
+                if (!driver.TryFindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormNotifcation_NotificationBar),
+                    out var notificationBar))
+                {
+                    return notifications;
+                }
+
+                if (notificationBar.TryFindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormNotifcation_ExpandButton), out var expandButton))
+                {
+                    if (!Convert.ToBoolean(notificationBar.GetAttribute("aria-expanded")))
+                        expandButton.Click();
+
+                    notificationBar = driver.WaitUntilAvailable(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.FlyoutRoot), TimeSpan.FromSeconds(2), "Failed to open the form notifications");
+                }
+
+                var notificationList = notificationBar.FindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormNotifcation_NotificationList));
+                var notificationListItems = notificationList.FindElements(By.TagName("li"));
+
+                foreach (var item in notificationListItems)
+                {
+                    var icon = item.FindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormNotifcation_NotificationTypeIcon));
+
+                    var notification = new FormNotification
+                    {
+                        Message = item.GetAttribute("aria-label")
+                    };
+
+                    if (icon.HasClass("MarkAsLost-symbol"))
+                        notification.Type = FormNotificationType.Error;
+                    else if (icon.HasClass("Warning-symbol"))
+                        notification.Type = FormNotificationType.Warning;
+                    else if (icon.HasClass("InformationIcon-symbol"))
+                        notification.Type = FormNotificationType.Information;
+                    else
+                        throw new TestExecutionException(Constants.ErrorCodes.UNKNOWN_FORM_NOTIFICATION_TYPE, icon.GetAttribute("class"));
+
+                    notifications.Add(notification);
+                }
+                return notifications;
+            });
         }
 
         public Guid GetRecordId()

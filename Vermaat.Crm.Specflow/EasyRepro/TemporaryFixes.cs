@@ -244,45 +244,38 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         /// <param name="field">The field</param>
         /// <param name="value">The value</param>
         /// <example>xrmApp.Entity.SetValue("firstname", "Test");</example>
-        public static BrowserCommandResult<bool> SetValueFix(this WebClient client, string field, string value, ContainerType formContextType)
+        public static void SetValueFix(IWebDriver driver, SeleniumSelectorData selectors, string field, string value, ContainerType formContextType)
         {
-            return client.Execute(BrowserOptionHelper.GetOptions("Set Value"), driver =>
+            IWebElement fieldContainer = null;
+
+            if (formContextType == ContainerType.Body)
             {
+                // Initialize the entity form context
+                var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.FormContext]));
+                fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", field)));
+            }
+            else if (formContextType == ContainerType.Header)
+            {
+                // Initialize the Header context
+                var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.HeaderContext]));
+                fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", field)));
+            }
+            else if (formContextType == ContainerType.Dialog)
+            {
+                // Initialize the Dialog context
+                var formContext = driver.WaitUntilAvailable(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_Container));
+                fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", field)));
+            }
 
-                IWebElement fieldContainer = null;
+            bool found = fieldContainer.TryFindElement(By.TagName("input"), out IWebElement input);
 
-                if (formContextType == ContainerType.Body)
-                {
-                    // Initialize the entity form context
-                    var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.FormContext]));
-                    fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", field)));
-                }
-                else if (formContextType == ContainerType.Header)
-                {
-                    // Initialize the Header context
-                    var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.HeaderContext]));
-                    fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", field)));
-                }
-                else if (formContextType == ContainerType.Dialog)
-                {
-                    // Initialize the Dialog context
-                    var formContext = driver.WaitUntilAvailable(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_Container));
-                    fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", field)));
-                }
+            if (!found)
+                found = fieldContainer.TryFindElement(By.TagName("textarea"), out input);
 
-                IWebElement input;
-                bool found = fieldContainer.TryFindElement(By.TagName("input"), out input);
+            if (!found)
+                throw new NoSuchElementException($"Field with name {field} does not exist.");
 
-                if (!found)
-                    found = fieldContainer.TryFindElement(By.TagName("textarea"), out input);
-
-                if (!found)
-                    throw new NoSuchElementException($"Field with name {field} does not exist.");
-
-                SetInputValue(driver, input, value);
-
-                return true;
-            });
+            SetInputValue(driver, input, value);
         }
 
         private static void SetInputValue(IWebDriver driver, IWebElement input, string value)
@@ -304,35 +297,31 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         /// </summary>
         /// <param name="control">The option you want to set.</param>
         /// <example>xrmApp.Entity.SetValue(new OptionSet { Name = "preferredcontactmethodcode", Value = "Email" });</example>
-        public static BrowserCommandResult<bool> SetValueFix(this WebClient client, OptionSet control, ContainerType formContextType)
+        public static void SetValueFix(IWebDriver driver, SeleniumSelectorData selectors, OptionSet control, ContainerType formContextType)
         {
             var controlName = control.Name;
-            return client.Execute(BrowserOptionHelper.GetOptions($"Set OptionSet Value: {controlName}"), driver =>
+            IWebElement fieldContainer = null;
+
+            if (formContextType == ContainerType.Body)
             {
-                IWebElement fieldContainer = null;
+                // Initialize the entity form context
+                var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.FormContext]));
+                fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", controlName)));
+            }
+            else if (formContextType == ContainerType.Header)
+            {
+                // Initialize the Header context
+                var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.HeaderContext]));
+                fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", controlName)));
+            }
+            else if (formContextType == ContainerType.Dialog)
+            {
+                // Initialize the Dialog context
+                var formContext = driver.WaitUntilAvailable(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_Container));
+                fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", controlName)));
+            }
 
-                if (formContextType == ContainerType.Body)
-                {
-                    // Initialize the entity form context
-                    var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.FormContext]));
-                    fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", controlName)));
-                }
-                else if (formContextType == ContainerType.Header)
-                {
-                    // Initialize the Header context
-                    var formContext = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.HeaderContext]));
-                    fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", controlName)));
-                }
-                else if (formContextType == ContainerType.Dialog)
-                {
-                    // Initialize the Dialog context
-                    var formContext = driver.WaitUntilAvailable(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_Container));
-                    fieldContainer = formContext.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.Entity.TextFieldContainer].Replace("[NAME]", controlName)));
-                }
-
-                TrySetValue(fieldContainer, control);
-                return true;
-            });
+            TrySetValue(fieldContainer, control);
         }
 
         private static void TrySetValue(IWebElement fieldContainer, OptionSet control)

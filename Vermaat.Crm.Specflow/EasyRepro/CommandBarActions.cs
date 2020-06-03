@@ -95,29 +95,28 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         public EntityReference ReviseQuote()
         {
             Logger.WriteLine("Revising Quote");
-            return _app.Client.Execute(BrowserOptionHelper.GetOptions($"Revise Quote"), driver =>
+            return _app.ExecuteSeleniumFunction((driver, selectors) =>
             {
                 ClickButton(_app.ButtonTexts.ReviseQuote);
 
                 _app.Client.Browser.ThinkTime(1000);
-                HelperMethods.WaitForFormLoad(driver);
+                SeleniumFunctions.WaitForFormLoad(driver, selectors);
 
                 return new EntityReference("quote", _app.App.Entity.GetObjectId()); ;
-            }).Value;            
+            });            
         }
 
 
 
         private void CreateOrderDialog()
         {
-            _app.Client.Execute(BrowserOptionHelper.GetOptions($"Create Sales Order"), driver =>
+            _app.ExecuteSeleniumFunction((driver, selectors) =>
             {
-                
-                var container = driver.WaitUntilAvailable(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_Container));
-                var button = container.FindElement(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_OK));
+                var container = driver.WaitUntilAvailable(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_Container));
+                var button = container.FindElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Dialog_OK));
 
                 button.Click();
-                HelperMethods.WaitForFormLoad(driver, new FormIsOfEntity("salesorder"));
+                SeleniumFunctions.WaitForFormLoad(driver, selectors, new FormIsOfEntity("salesorder"));
 
                 return true;
             });

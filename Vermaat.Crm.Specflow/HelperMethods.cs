@@ -89,47 +89,6 @@ namespace Vermaat.Crm.Specflow
             return value;
         }
 
-        public static void WaitForFormLoad(IWebDriver driver, params IFormLoadCondition[] additionalConditions)
-        {
-            DateTime timeout = DateTime.Now.AddSeconds(30);
-
-            bool loadComplete = false;
-            while (!loadComplete)
-            {
-                loadComplete = true;
-
-                TimeSpan timeLeft = timeout.Subtract(DateTime.Now);
-                if (timeLeft.TotalMilliseconds > 0)
-                {
-                    driver.WaitForPageToLoad();
-                    driver.WaitUntilClickable(SeleniumFunctions.Selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_FormLoad),
-                        timeLeft,
-                        null,
-                        () => { throw new TestExecutionException(Constants.ErrorCodes.FORM_LOAD_TIMEOUT); }
-                    );
-
-                    if (additionalConditions != null)
-                    {
-                        foreach (var condition in additionalConditions)
-                        {
-                            if (!condition.Evaluate(driver))
-                            {
-                                Logger.WriteLine("Evaluation failed. Waiting for next attempt");
-                                loadComplete = false;
-                                Thread.Sleep(100);
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    throw new TestExecutionException(Constants.ErrorCodes.FORM_LOAD_TIMEOUT);
-                }
-            }
-            Logger.WriteLine("Form load completed");
-        }
-
         public static CommandAction GetPreferredCommandActionFromTarget(CrmTestingContext crmContext)
         {
             if (crmContext.IsTarget(Constants.SpecFlow.TARGET_API))

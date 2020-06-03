@@ -60,14 +60,13 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         public FormData OpenRecord(OpenFormOptions formOptions)
         {
             Logger.WriteLine($"Opening record {formOptions.EntityName} with ID {formOptions.EntityId}");
-            App.Client.Execute(BrowserOptionHelper.GetOptions($"Open: {formOptions.EntityName}"), driver =>
+            App.ExecuteSeleniumFunction((driver, selectors) =>
             {
-
                 driver.Navigate().GoToUrl(formOptions.GetUrl(driver, _currentAppId));
                 CheckAlert(driver);
-                HelperMethods.WaitForFormLoad(driver);
+                SeleniumFunctions.WaitForFormLoad(driver, selectors);
 
-                if (App.Client.ScriptErrorExists())
+                if (driver.HasElement(selectors.GetXPathSeleniumSelector(SeleniumSelectorItems.Entity_ScriptErrorDialog)))
                     throw new TestExecutionException(Constants.ErrorCodes.FORMLOAD_SCRIPT_ERROR_ON_FORM);
 
                 return true;
