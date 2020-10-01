@@ -24,14 +24,10 @@ namespace Vermaat.Crm.Specflow.EasyRepro
         public UCIApp App { get; }
         public FormData LastFormData { get; private set; }
 
-        static UCIBrowser()
-        {
-          
-        }
 
-        public UCIBrowser(BrowserOptions browserOptions, ButtonTexts buttonTexts, CrmModelApps apps)
+        public UCIBrowser(UCIApp app, CrmModelApps apps)
         {
-            App = new UCIApp(browserOptions, buttonTexts);
+            App = app;
             _forms = new Dictionary<string, FormData>();
             _apps = apps;
         }

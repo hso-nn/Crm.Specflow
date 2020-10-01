@@ -1,4 +1,6 @@
-﻿using Microsoft.Dynamics365.UIAutomation.Browser;
+﻿using Microsoft.Dynamics365.UIAutomation.Api.UCI;
+using Microsoft.Dynamics365.UIAutomation.Browser;
+using System;
 using Vermaat.Crm.Specflow.EasyRepro;
 
 namespace Vermaat.Crm.Specflow
@@ -10,7 +12,7 @@ namespace Vermaat.Crm.Specflow
 
         public BrowserOptions BrowserOptions { get; }
         public string CurrentApp { get; set; }
-        public bool IsLoggedIn { get; private set; }
+        public bool IsSessionActive { get; private set; }
 
         public SeleniumTestingContext(CrmTestingContext crmContext)
         {
@@ -27,14 +29,13 @@ namespace Vermaat.Crm.Specflow
 
         }
 
-        public UCIBrowser GetBrowser()
+        public T GetBrowser<T>(IBrowserFactory<T> browserFactory)
         {
             if (_crmContext.IsTarget("API"))
                 throw new TestExecutionException(Constants.ErrorCodes.CANT_START_BROWSER_FOR_API_TESTS);
 
-            var browser = GlobalTestingContext.BrowserManager.GetBrowser(BrowserOptions, GlobalTestingContext.ConnectionManager.CurrentBrowserLoginDetails);
-            browser.ChangeApp(CurrentApp);
-            IsLoggedIn = true;
+            var browser = GlobalTestingContext.BrowserManager.GetBrowser<T>(browserFactory, BrowserOptions, GlobalTestingContext.ConnectionManager.CurrentBrowserLoginDetails);
+            IsSessionActive = true;
             return browser;
         }
 

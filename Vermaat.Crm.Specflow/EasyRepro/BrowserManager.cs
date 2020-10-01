@@ -1,4 +1,5 @@
-﻿using Microsoft.Dynamics365.UIAutomation.Browser;
+﻿using Microsoft.Dynamics365.UIAutomation.Api.UCI;
+using Microsoft.Dynamics365.UIAutomation.Browser;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,30 +12,26 @@ using Vermaat.Crm.Specflow.Entities;
 
 namespace Vermaat.Crm.Specflow.EasyRepro
 {
-    internal class BrowserManager : IDisposable
+    public class BrowserManager : IDisposable
     {
-        private readonly ButtonTexts _buttonTexts;
-        private readonly Dictionary<BrowserType, Dictionary<string, UCIBrowser>> _browserCache;
-        private readonly Lazy<CrmModelApps> _appCache;
+        private readonly Dictionary<BrowserType, Dictionary<string, UCIApp>> _browserCache;
 
-        public BrowserManager(ButtonTexts buttonTexts)
+        public BrowserManager()
         {
-            _browserCache = new Dictionary<BrowserType, Dictionary<string, UCIBrowser>>();
-            _buttonTexts = buttonTexts;
-            _appCache = new Lazy<CrmModelApps>(InitializeCache);
+            _browserCache = new Dictionary<BrowserType, Dictionary<string, UCIApp>>();
         }
 
-        public UCIBrowser GetBrowser(BrowserOptions options, BrowserLoginDetails browserLoginDetails)
+        public T GetBrowser<T>(IBrowserFactory<T> factory, BrowserOptions options, BrowserLoginDetails browserLoginDetails)
         {
             Logger.WriteLine("Getting Browser");
             if(!_browserCache.TryGetValue(options.BrowserType, out var dic))
             {
                 Logger.WriteLine($"No browser for {options.BrowserType} doesn't exist. Creating new list");
-                dic = new Dictionary<string, UCIBrowser>();
+                dic = new Dictionary<string, UCIApp>();
                 _browserCache.Add(options.BrowserType, dic);
             }
 
-            if(!dic.TryGetValue(browserLoginDetails.Username, out UCIBrowser browser))
+            if(!dic.TryGetValue(browserLoginDetails.Username, out var app))
             {
                 Logger.WriteLine($"Browser for {browserLoginDetails.Username} doesn't exist. Creating new browser session");
 
@@ -43,17 +40,12 @@ namespace Vermaat.Crm.Specflow.EasyRepro
                     options.DriversPath = GetDriverPath(options);
                 }
                 
-                browser = new UCIBrowser(options, _buttonTexts, _appCache.Value);
-                dic.Add(browserLoginDetails.Username, browser);
-                browser.Login(browserLoginDetails);
+                app = new UCIApp(options);
+                dic.Add(browserLoginDetails.Username, app);
+                var browser = factory.FromApp(app);
+                factory.PrepareBrowser(browser, browserLoginDetails);
             }
-            return browser;
-        }
-
-        private CrmModelApps InitializeCache()
-        {
-            Logger.WriteLine("Initializing App Cache");
-            return CrmModelApps.GetApps();
+            return factory.FromApp(app);
         }
 
         private string GetDriverPath(BrowserOptions options)
